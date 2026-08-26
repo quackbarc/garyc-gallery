@@ -1101,6 +1101,7 @@
          * each other.
          */
         const bunkerMin = 6762001;
+        const bunkerMax = 7506655;
 
         /**
          * The controller to immediately halt the extend___() methods.
@@ -1487,25 +1488,18 @@
          */
         async function getStats() {
             if(settings.gallery == "noz.rip-bunker") {
-                const maxResp = await fetch(
-                    "https://noz.rip/sketch_bunker/getMaxID.php",
-                    {cache: "reload"},
-                );
-                const maxIDRaw = await maxResp.text();
-                const maxID = parseInt(maxIDRaw);
-
-                const sketches = 0;
-                const artists = 0;
-                const peekers = 0;
-                const minID = bunkerMin;
                 return {
-                    sketches, artists, peekers, maxID, minID,
+                    sketches: 0,
+                    artists: 0,
+                    peekers: 0,
+                    maxID: bunkerMax,
+                    minID: bunkerMin,
                 };
             }
 
             let fetchURL = "https://garyc.me/sketch/getStats.php?details";
             if(settings.gallery == "noz.rip") {
-                fetchURL = "https://noz.rip/sketch/getStats.php?details";
+                fetchURL = "https://noz.rip/sketch/stats";
             }
 
             const resp = await fetch(
@@ -1514,6 +1508,16 @@
             );
 
             const stats = await resp.json();
+            if(settings.gallery == "noz.rip") {
+                // noz.rip's stats schema is {sketches, artists, peekers, max_id}.
+                // The gallery `min` is always gonna be 1.
+                return {
+                    ...stats,
+                    maxID: stats.max_id,
+                    minID: 1,
+                };
+            }
+
             return stats;
         }
 
@@ -1535,10 +1539,10 @@
 
             let fetchURL;
             if(settings.gallery == "noz.rip-bunker" || useBunker) {
-                fetchURL = `https://noz.rip/sketch_bunker/get.php?details&id=${id}`;
+                fetchURL = `https://noz.rip/sketch_bunker/data/${id}`;
             }
             else if(settings.gallery == "noz.rip") {
-                fetchURL = `https://noz.rip/sketch/get.php?details&id=${id}`;
+                fetchURL = `https://noz.rip/sketch/data/${id}`;
             }
             else {
                 fetchURL = `https://garyc.me/sketch/get.php?details&id=${id}`;
@@ -1583,10 +1587,10 @@
                 && id < galleryMin
             );
             if(settings.gallery == "noz.rip-bunker" || useBunker) {
-                return `https://noz.rip/sketch_bunker/getIMG.php?id=${id}&full`;
+                return `https://noz.rip/sketch_bunker/image/${id}th.jpeg`;
             }
             if(settings.gallery == "noz.rip") {
-                return `https://noz.rip/sketch/getIMG.php?id=${id}&full`;
+                return `https://noz.rip/sketch/image/${id}th.jpeg`;
             }
             return `https://garyc.me/sketch/getIMG.php?id=${id}&save`;
         }
